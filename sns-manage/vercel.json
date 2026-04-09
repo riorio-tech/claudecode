@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'no build'",
+  "outputDirectory": "public",
+  "functions": {
+    "api/vercel.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)",     "dest": "/api/vercel.js" },
+    { "src": "/topics.json",  "dest": "/api/vercel.js" },
+    { "src": "/healthz",      "dest": "/api/vercel.js" },
+    { "src": "/(.*)",         "dest": "/$1" }
+  ]
+}
