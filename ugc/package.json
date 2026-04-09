@@ -1,0 +1,16 @@
+{
+  "name": "ugc",
+  "version": "0.1.0",
+  "description": "AI avatar UGC video generation pipeline",
+  "type": "module",
+  "engines": { "node": ">=20.0.0" },
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "commander": "^12.0.0",
+    "dotenv": "^17.3.1"
+  }
+}

@@ -1,0 +1,22 @@
+[
+  { "topic": "AIエージェントで業務を自動化した実例", "category": "ai_tech", "targetAudience": "20〜40代ビジネスパーソン" },
+  { "topic": "Claude vs GPT-4o：プロンプトエンジニアが比較", "category": "llm", "targetAudience": "エンジニア・テックマニア" },
+  { "topic": "SNS運用をAIに任せて3ヶ月で起きた変化", "category": "sns_automation", "targetAudience": "個人クリエイター・事業主" },
+  { "topic": "クリエイターエコノミーで月収100万の現実", "category": "creator_economy", "targetAudience": "フォロワー1万〜10万のクリエイター" },
+  { "topic": "毎日投稿が続かない本当の理由とAIの解答", "category": "sns_automation", "targetAudience": "SNS運用者全般" },
+  { "topic": "アルゴリズム負債：投稿を止めると起きること", "category": "sns_automation", "targetAudience": "収益化済みクリエイター" },
+  { "topic": "プロンプトエンジニアリング入門：今日から使える5パターン", "category": "llm", "targetAudience": "ビジネスパーソン・マーケター" },
+  { "topic": "AIに自分の文体を学習させる方法", "category": "ai_tech", "targetAudience": "ライター・クリエイター" },
+  { "topic": "TikTokアルゴリズムが最近変えた3つのこと", "category": "sns_automation", "targetAudience": "TikTok運用者" },
+  { "topic": "MCNは今クリエイターに何を求めているか", "category": "creator_economy", "targetAudience": "クリエイター志望・MCN所属者" },
+  { "topic": "AIコンテンツとブランドボイスを両立させる設計論", "category": "ai_tech", "targetAudience": "マーケター・ブランド担当者" },
+  { "topic": "InstagramリールvsTikTok：アルゴリズム比較", "category": "sns_automation", "targetAudience": "SNSマーケター" },
+  { "topic": "LLMのコストを1/10にするHaiku活用パターン", "category": "llm", "targetAudience": "エンジニア・スタートアップ" },
+  { "topic": "承認フローがあるAIシステムが正しい理由", "category": "ai_tech", "targetAudience": "AI活用リーダー・経営者" },
+  { "topic": "フォロワー数より大事なエンゲージメント率の話", "category": "creator_economy", "targetAudience": "フォロワー1万以下のクリエイター" },
+  { "topic": "A/Bテストで投稿の勝ちパターンを自動学習する仕組み", "category": "sns_automation", "targetAudience": "SNS担当者・マーケター" },
+  { "topic": "模倣欲望理論がSNSマーケティングを変える", "category": "ai_tech", "targetAudience": "マーケター・コンテンツクリエイター" },
+  { "topic": "AI副業で収入を増やした会社員の戦略", "category": "creator_economy", "targetAudience": "会社員・副業志望" },
+  { "topic": "RAGとは何か：ビジネスで使えるLLM強化の仕組み", "category": "llm", "targetAudience": "非エンジニアのビジネスパーソン" },
+  { "topic": "SNS自動化ツール比較：HootsuiteとAIエージェントの違い", "category": "sns_automation", "targetAudience": "SNS運用担当者・フリーランス" }
+]

@@ -1,0 +1,35 @@
+{
+  "name": "inoue-movie6",
+  "version": "0.1.0",
+  "description": "TikTok Shop 商品動画 自動生成パイプライン",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "bin": {
+    "inoue-movie6": "./cli.ts"
+  },
+  "scripts": {
+    "start": "tsx cli.ts",
+    "test": "node --import tsx/esm --test 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "better-sqlite3": "^9.4.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "sharp": "^0.33.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "slow_push_in": "camera slowly moves forward toward the subject, subtle dolly in, cinematic depth of field, emotional tension",
+  "snap_zoom_in": "sudden dramatic zoom into subject's face, handheld camera snap, intense emotional moment",
+  "micro_handheld": "slight handheld camera shake, intimate realistic movement, characters in dialogue",
+  "dolly_in_slow": "graceful slow dolly forward, subject holds still, dramatic lighting maintained",
+  "slow_pull_back": "camera slowly pulls back revealing environment, subject remains centered, melancholic mood",
+  "track_follow": "camera follows character walking away, tracking shot from behind, emotional farewell",
+  "freeze": "completely static camera, subject holds position, cinematic freeze frame, dramatic pause",
+  "static_with_drift": "nearly static camera with 1-2% gentle drift, subject motionless, oppressive silence",
+  "fast_zoom_in": "rapid zoom into object or face, revealing detail, sudden camera acceleration",
+  "dutch_drift": "camera tilted 20 degrees, slow drift to the right, psychological disorientation",
+  "whip_pan_cut": "rapid horizontal whip pan from left to right, energy cut transition",
+  "orbit_slow": "camera orbits subject at 45-degree angle, 180 degrees total movement, slow and deliberate"
+}

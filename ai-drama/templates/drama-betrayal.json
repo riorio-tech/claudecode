@@ -1,0 +1,43 @@
+{
+  "template": "betrayal",
+  "description": "裏切りアーク — 45〜60 秒・6 シーン",
+  "episodes": 3,
+  "perEpisode": {
+    "1": {
+      "title": "第1話: 仮面の友人",
+      "scenes": [
+        { "sceneIndex": 0, "emotionalBeat": "hook_opener",       "targetDurationSec": 5,  "note": "冒頭から感情のピーク。スクロール停止させる" },
+        { "sceneIndex": 1, "emotionalBeat": "tension_build",     "targetDurationSec": 8,  "note": "何かがおかしい。不安の伏線" },
+        { "sceneIndex": 2, "emotionalBeat": "revelation",        "targetDurationSec": 8,  "note": "真実の発覚。小道具クローズアップ" },
+        { "sceneIndex": 3, "emotionalBeat": "confrontation",     "targetDurationSec": 12, "note": "正面対決。感情爆発" },
+        { "sceneIndex": 4, "emotionalBeat": "despair",           "targetDurationSec": 8,  "note": "現実の重さ。沈黙ソロ" },
+        { "sceneIndex": 5, "emotionalBeat": "cliffhanger_end",   "targetDurationSec": 5,  "note": "解決なし。余韻のみ" }
+      ],
+      "targetDurationSec": 46
+    },
+    "2": {
+      "title": "第2話: 反撃の始まり",
+      "scenes": [
+        { "sceneIndex": 0, "emotionalBeat": "hook_opener",       "targetDurationSec": 5,  "note": "前話の続き。状況は悪化" },
+        { "sceneIndex": 1, "emotionalBeat": "tension_build",     "targetDurationSec": 8,  "note": "主人公の秘めた力が見えてくる" },
+        { "sceneIndex": 2, "emotionalBeat": "silent_stare",      "targetDurationSec": 6,  "note": "決意の瞬間" },
+        { "sceneIndex": 3, "emotionalBeat": "declaration",       "targetDurationSec": 10, "note": "逆転の第一手" },
+        { "sceneIndex": 4, "emotionalBeat": "shock_reaction",    "targetDurationSec": 6,  "note": "敵の動揺" },
+        { "sceneIndex": 5, "emotionalBeat": "cliffhanger_end",   "targetDurationSec": 5,  "note": "さらなる障壁の登場" }
+      ],
+      "targetDurationSec": 40
+    },
+    "3": {
+      "title": "第3話: 完全なる逆襲",
+      "scenes": [
+        { "sceneIndex": 0, "emotionalBeat": "hook_opener",       "targetDurationSec": 5,  "note": "クライマックス直前" },
+        { "sceneIndex": 1, "emotionalBeat": "confrontation",     "targetDurationSec": 12, "note": "最終対決" },
+        { "sceneIndex": 2, "emotionalBeat": "revelation",        "targetDurationSec": 8,  "note": "真実がすべて明らかになる" },
+        { "sceneIndex": 3, "emotionalBeat": "declaration",       "targetDurationSec": 10, "note": "完全な逆転宣言" },
+        { "sceneIndex": 4, "emotionalBeat": "despair",           "targetDurationSec": 6,  "note": "敵の崩壊" },
+        { "sceneIndex": 5, "emotionalBeat": "cliffhanger_end",   "targetDurationSec": 5,  "note": "新たな章の予告（続編へ）" }
+      ],
+      "targetDurationSec": 46
+    }
+  }
+}

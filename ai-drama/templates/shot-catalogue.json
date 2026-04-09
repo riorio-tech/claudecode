@@ -1,0 +1,77 @@
+{
+  "establishing": {
+    "description": "ワイドショット・全体環境",
+    "dramaUse": "シーン冒頭のみ（1 話に 1 回まで）",
+    "promptHint": "wide establishing shot, full environment visible"
+  },
+  "medium_two_shot": {
+    "description": "2 人ウエスト以上・向き合い",
+    "dramaUse": "対話・対立",
+    "promptHint": "medium two shot, both characters waist-up, facing each other"
+  },
+  "medium_single": {
+    "description": "1 人ウエスト以上・やや外れ",
+    "dramaUse": "内省・リアクション",
+    "promptHint": "medium single shot, one character slightly off-center"
+  },
+  "ots_left": {
+    "description": "左キャラの肩越し",
+    "dramaUse": "発話（左→右）",
+    "promptHint": "over-the-shoulder shot from left character's back"
+  },
+  "ots_right": {
+    "description": "右キャラの肩越し",
+    "dramaUse": "応答（右→左）",
+    "promptHint": "over-the-shoulder shot from right character's back"
+  },
+  "close_face": {
+    "description": "顔がフレームの 70%",
+    "dramaUse": "感情表出・告白",
+    "promptHint": "close-up portrait, face fills 70% of frame"
+  },
+  "extreme_close_eyes": {
+    "description": "目・眉のみ",
+    "dramaUse": "沈黙の緊張・凝視",
+    "promptHint": "extreme close-up, eyes and brow only, fills frame"
+  },
+  "extreme_close_prop": {
+    "description": "小道具クローズアップ",
+    "dramaUse": "発覚・証拠フォーカス",
+    "promptHint": "extreme close-up of object, fills frame, sharp focus"
+  },
+  "low_angle_power": {
+    "description": "見上げるアングル",
+    "dramaUse": "宣言・支配・圧力",
+    "promptHint": "low angle shot looking up at character, powerful stance"
+  },
+  "high_angle_weak": {
+    "description": "見下ろすアングル",
+    "dramaUse": "弱さ・絶望・孤立",
+    "promptHint": "high angle shot looking down at character, small and vulnerable"
+  },
+  "dutch_angle": {
+    "description": "15〜25° 傾き",
+    "dramaUse": "裏切り・衝撃・不安定",
+    "promptHint": "dutch angle 20 degrees, tilted frame, psychological tension"
+  },
+  "pov_subjective": {
+    "description": "主観視点",
+    "dramaUse": "発見・混乱",
+    "promptHint": "point of view shot, subjective camera as character's eyes"
+  },
+  "insert_environment": {
+    "description": "環境ディテール（雨・時計・扉）",
+    "dramaUse": "感情の転換・時間経過",
+    "promptHint": "insert shot, environmental detail, no characters"
+  },
+  "back_walkaway": {
+    "description": "背中・歩き去り",
+    "dramaUse": "別れ・拒絶・反抗",
+    "promptHint": "rear view, character walking away from camera"
+  },
+  "silhouette": {
+    "description": "逆光シルエット",
+    "dramaUse": "謎・登場・退場",
+    "promptHint": "silhouette against strong backlight, dark figure"
+  }
+}

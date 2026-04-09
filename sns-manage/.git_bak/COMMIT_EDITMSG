@@ -1,0 +1,11 @@
+Webダッシュボード追加: プラットフォーム選択・コンテンツ確認・スケジューラー制御UI
+
+- public/index.html: Tailwind CSS製SPAダッシュボード
+  - プラットフォーム複数選択（Threads/X/TikTok/Instagram/YouTube）
+  - トピック入力 + 🎲ランダム選択（topics.jsonから）
+  - ジョブ一覧・ステータス表示（10秒自動更新）
+  - コンテンツプレビュー・承認・投稿モーダル
+  - スケジューラー起動/停止トグル
+- api/server.js: @fastify/static でdashboard配信 + /topics.json エンドポイント追加
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

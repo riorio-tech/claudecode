@@ -1,0 +1,6 @@
+node_modules/
+.env
+output/
+memory/threads.db
+memory/threads.db-shm
+memory/threads.db-wal

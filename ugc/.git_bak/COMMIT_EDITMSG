@@ -1,0 +1,5 @@
+fix: resume.js を inpaint3 ジョブ用に更新
+
+JOB_DIR / OUTPUT_DIR / VIDEO_0_ID を inpaint3 生成時の値に変更。
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

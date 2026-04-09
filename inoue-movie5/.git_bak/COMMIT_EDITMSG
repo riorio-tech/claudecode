@@ -1,0 +1,13 @@
+feat(pipeline): モーション強化・家撮り設定・BGM追加・output サブフォルダ分離
+
+- SHOT_PATTERNS の全モーションプロンプトを大文字アクション語で強化（FAST DRAMATIC SWING等）
+- buildMotionPrompt に強制動き指示と home video style を追加
+- compositeProduct: hook を cover ベースに統一し画像サイズ依存バグを修正
+  - hook: cover + -2°傾き（手ブレ感）
+  - show: 80%サイズ + ウォーム背景 + +1°傾き
+  - close: 90%サイズ + ウォーム背景 + +3°傾き
+- BGM ランダム選択・ミックス機能を追加（templates/bgm/ から15%音量でamix）
+- output サブフォルダを images/ と videos/ に分離
+- agents/02_shot-planner, 03_image-gen, 04_video-gen を v2 仕様に更新
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

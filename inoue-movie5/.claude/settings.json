@@ -1,0 +1,14 @@
+{
+  "env": {
+    "PATH": "/Users/reoreo/claudecode/inoue-movie4/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "FFMPEG_PATH": "/Users/reoreo/claudecode/inoue-movie4/bin/ffmpeg",
+    "FFPROBE_PATH": "/Users/reoreo/claudecode/inoue-movie4/bin/ffprobe"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(chmod 777 *)"
+    ]
+  }
+}

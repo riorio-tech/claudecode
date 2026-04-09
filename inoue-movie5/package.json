@@ -1,0 +1,29 @@
+{
+  "name": "inoue-movie",
+  "version": "0.2.0",
+  "description": "TikTok Shop 商品動画 自動生成パイプライン（1商品×10本並列生成）",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "bin": {
+    "inoue-movie": "./cli.js"
+  },
+  "scripts": {
+    "start": "node cli.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@fal-ai/client": "^1.9.5",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@runwayml/sdk": "^1.4.4",
+    "better-sqlite3": "^9.4.0",
+    "commander": "^12.0.0",
+    "dotenv": "^17.3.1",
+    "sharp": "^0.33.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.22.0"
+  }
+}

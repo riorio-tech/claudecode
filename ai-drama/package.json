@@ -1,0 +1,22 @@
+{
+  "name": "ai-drama",
+  "version": "1.0.0",
+  "description": "AI 短編ドラマ動画パイプライン（TikTok/Reels 9:16 縦型）",
+  "type": "module",
+  "engines": { "node": ">=20.0.0" },
+  "bin": { "ai-drama": "./cli.js" },
+  "scripts": {
+    "start": "node cli.js",
+    "dry-run": "node cli.js generate --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "commander": "^12.0.0",
+    "dotenv": "^17.3.1",
+    "sharp": "^0.33.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.22.0"
+  }
+}

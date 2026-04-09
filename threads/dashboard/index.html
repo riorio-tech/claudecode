@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threads 投稿ダッシュボード</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #e8e8e8;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+    header span { font-size: 13px; color: #666; }
+
+    .sync-btn {
+      margin-left: auto;
+      padding: 8px 18px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sync-btn:hover { background: #252525; }
+
+    main { padding: 28px 32px; max-width: 1280px; margin: 0 auto; }
+
+    /* --- Stats cards --- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card-label { font-size: 12px; color: #666; margin-bottom: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .card-value { font-size: 28px; font-weight: 700; color: #fff; }
+    .card-sub { font-size: 12px; color: #555; margin-top: 4px; }
+
+    /* --- Charts row --- */
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .chart-box {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-box h3 { font-size: 13px; color: #888; margin-bottom: 16px; }
+    .chart-box canvas { max-height: 220px; }
+
+    /* --- Posts table --- */
+    .posts-section h3 {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .filter-row label { font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .filter-row input[type=checkbox] { accent-color: #4ade80; }
+
+    .posts-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .posts-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #555;
+      font-weight: 500;
+      border-bottom: 1px solid #222;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .posts-table td {
+      padding: 12px;
+      border-bottom: 1px solid #1a1a1a;
+      vertical-align: top;
+    }
+    .posts-table tr:hover td { background: #161616; }
+
+    .score-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .score-high { background: #14532d; color: #4ade80; }
+    .score-mid  { background: #713f12; color: #fbbf24; }
+    .score-low  { background: #450a0a; color: #f87171; }
+
+    .text-preview {
+      max-width: 420px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #ccc;
+      line-height: 1.5;
+    }
+    .text-preview.collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .expand-btn {
+      font-size: 11px;
+      color: #555;
+      cursor: pointer;
+      margin-top: 4px;
+      display: block;
+    }
+    .expand-btn:hover { color: #888; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #1e1e1e;
+      color: #666;
+      border: 1px solid #2a2a2a;
+    }
+    .tag.published { background: #0f2318; color: #4ade80; border-color: #14532d; }
+    .tag.dry { background: #1e1e1e; color: #555; }
+
+    .stat-num { color: #fff; font-weight: 600; }
+    .stat-null { color: #333; }
+
+    .loading { text-align: center; padding: 60px; color: #444; }
+
+    @media (max-width: 768px) {
+      .charts { grid-template-columns: 1fr; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Threads ダッシュボード</h1>
+  <span id="last-updated"></span>
+  <button class="sync-btn" onclick="refreshAll()">↻ 更新</button>
+</header>
+
+<main>
+  <div class="stats" id="stats-row">
+    <div class="loading">読み込み中...</div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-box">
+      <h3>スコア推移（日別平均）</h3>
+      <canvas id="score-chart"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>フォーマット別 いいね数</h3>
+      <canvas id="format-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="posts-section">
+    <h3>投稿一覧</h3>
+    <div class="filter-row">
+      <label>
+        <input type="checkbox" id="only-published" onchange="loadPosts()">
+        投稿済みのみ
+      </label>
+    </div>
+    <table class="posts-table">
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>投稿文</th>
+          <th>フォーマット</th>
+          <th>スコア</th>
+          <th>❤️</th>
+          <th>💬</th>
+          <th>状態</th>
+        </tr>
+      </thead>
+      <tbody id="posts-body">
+        <tr><td colspan="7" class="loading">読み込み中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+let scoreChart = null;
+let formatChart = null;
+
+async function api(path) {
+  const res = await fetch(path);
+  return res.json();
+}
+
+function scoreClass(s) {
+  if (!s) return '';
+  if (s >= 85) return 'score-high';
+  if (s >= 70) return 'score-mid';
+  return 'score-low';
+}
+
+async function loadStats() {
+  const s = await api('/api/stats');
+  document.getElementById('stats-row').innerHTML = `
+    <div class="card">
+      <div class="card-label">総投稿数</div>
+      <div class="card-value">${s.total_posts ?? 0}</div>
+      <div class="card-sub">うち公開 ${s.published ?? 0} 件</div>
+    </div>
+    <div class="card">
+      <div class="card-label">平均スコア</div>
+      <div class="card-value">${s.avg_score ?? '—'}</div>
+      <div class="card-sub">最高 ${s.best_score ?? '—'} 点</div>
+    </div>
+    <div class="card">
+      <div class="card-label">総いいね数</div>
+      <div class="card-value">${s.total_likes ?? 0}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">総返信数</div>
+      <div class="card-value">${s.total_replies ?? 0}</div>
+    </div>
+  `;
+}
+
+async function loadScoreChart() {
+  const rows = await api('/api/scores');
+  const ctx = document.getElementById('score-chart').getContext('2d');
+  if (scoreChart) scoreChart.destroy();
+  scoreChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.date),
+      datasets: [{
+        label: '平均スコア',
+        data: rows.map(r => r.avg_score),
+        borderColor: '#4ade80',
+        backgroundColor: 'rgba(74,222,128,0.08)',
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#4ade80',
+        fill: true,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { min: 60, max: 100, ticks: { color: '#555', font: { size: 11 } }, grid: { color: '#1e1e1e' } }
+      }
+    }
+  });
+}
+
+async function loadFormatChart() {
+  const rows = await api('/api/by-format');
+  const ctx = document.getElementById('format-chart').getContext('2d');
+  if (formatChart) formatChart.destroy();
+  formatChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.format_name?.replace('パターン', '')),
+      datasets: [{
+        label: 'いいね数',
+        data: rows.map(r => r.total_likes),
+        backgroundColor: 'rgba(96,165,250,0.7)',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 11 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#777', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+async function loadPosts() {
+  const onlyPublished = document.getElementById('only-published').checked;
+  const posts = await api(`/api/posts?limit=100&published=${onlyPublished}`);
+  const tbody = document.getElementById('posts-body');
+
+  if (posts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="loading">投稿なし</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = posts.map((p, i) => {
+    const score = p.eval_score;
+    const badgeClass = scoreClass(score);
+    const scoreBadge = score
+      ? `<span class="score-badge ${badgeClass}">${score}点</span>`
+      : '<span class="stat-null">—</span>';
+    const likes = p.like_count != null ? `<span class="stat-num">${p.like_count}</span>` : '<span class="stat-null">—</span>';
+    const replies = p.replies_count != null ? `<span class="stat-num">${p.replies_count}</span>` : '<span class="stat-null">—</span>';
+    const statusTag = p.dry_run
+      ? '<span class="tag dry">DRY</span>'
+      : '<span class="tag published">公開済</span>';
+    const id = `post-${i}`;
+    return `
+      <tr>
+        <td style="color:#555;white-space:nowrap">${(p.date || '').slice(5)}</td>
+        <td>
+          <div class="text-preview collapsed" id="${id}">${escHtml(p.text || '')}</div>
+          <span class="expand-btn" onclick="toggleExpand('${id}', this)">もっと見る</span>
+        </td>
+        <td><span class="tag">${p.format_name || '—'}</span></td>
+        <td>${scoreBadge}</td>
+        <td>${likes}</td>
+        <td>${replies}</td>
+        <td>${statusTag}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleExpand(id, btn) {
+  const el = document.getElementById(id);
+  if (el.classList.contains('collapsed')) {
+    el.classList.remove('collapsed');
+    btn.textContent = '閉じる';
+  } else {
+    el.classList.add('collapsed');
+    btn.textContent = 'もっと見る';
+  }
+}
+
+async function refreshAll() {
+  document.getElementById('last-updated').textContent = '更新中...';
+  await Promise.all([loadStats(), loadScoreChart(), loadFormatChart(), loadPosts()]);
+  document.getElementById('last-updated').textContent =
+    `最終更新: ${new Date().toLocaleTimeString('ja-JP')}`;
+}
+
+refreshAll();
+</script>
+</body>
+</html>

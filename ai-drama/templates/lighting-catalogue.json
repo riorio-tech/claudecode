@@ -1,0 +1,42 @@
+{
+  "high_contrast_backlight": {
+    "description": "強い逆光・リムライト",
+    "dramaUse": "謎の登場・感情的な強さ",
+    "promptHint": "strong backlight, subject partially silhouetted, rim lighting on edges, high contrast"
+  },
+  "single_source_hard": {
+    "description": "45° 上からの硬い 1 灯",
+    "dramaUse": "尋問・告白・対立",
+    "promptHint": "single hard light source 45 degrees above, deep shadows on half of face"
+  },
+  "window_natural_soft": {
+    "description": "窓からの柔らかい自然光",
+    "dramaUse": "静かな悲しみ・後悔",
+    "promptHint": "soft diffused daylight from window, moody ambient light"
+  },
+  "cold_blue_night": {
+    "description": "夜の青みがかった環境光",
+    "dramaUse": "危機・夜の対立",
+    "promptHint": "cool blue-tinted ambient light, night scene, harsh shadows"
+  },
+  "warm_golden_memory": {
+    "description": "暖かいゴールデンアワー",
+    "dramaUse": "回想・苦い思い出",
+    "promptHint": "warm golden-hour light, soft haze, nostalgic mood"
+  },
+  "overhead_fluorescent": {
+    "description": "冷たい蛍光灯の直上照明",
+    "dramaUse": "病院・教室・絶望",
+    "promptHint": "cold flat overhead fluorescent lighting, institutional setting"
+  },
+  "candle_firelight": {
+    "description": "揺れる暖かいオレンジ光",
+    "dramaUse": "夜の秘密・親密な告白",
+    "promptHint": "flickering warm orange candlelight, low key, intimate"
+  },
+  "rain_diffused": {
+    "description": "雨の曇り空・灰色拡散光",
+    "dramaUse": "別れ・悲しみ・送別",
+    "promptHint": "exterior rain, grey diffused overcast light, wet environment"
+  }
+}

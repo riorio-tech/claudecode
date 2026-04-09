@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rainbow SNS Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; }
+    .platform-btn input:checked + label { @apply ring-2; }
+    .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .spinning { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🌈</span>
+      <h1 class="text-lg font-bold tracking-tight">Rainbow SNS Manager</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <!-- Scheduler toggle -->
+      <div class="flex items-center gap-2 bg-gray-900 rounded-full px-4 py-2">
+        <span class="status-dot bg-gray-500" id="scheduler-dot"></span>
+        <span class="text-sm" id="scheduler-label">スケジューラー: 確認中...</span>
+        <button id="scheduler-toggle"
+          class="ml-2 text-xs px-3 py-1 rounded-full bg-gray-700 hover:bg-gray-600 transition">
+          ...
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Generate Panel -->
+    <section class="bg-gray-900 rounded-2xl p-6 space-y-5">
+      <h2 class="font-semibold text-white">コンテンツ生成</h2>
+
+      <!-- Platform selector -->
+      <div>
+        <p class="text-xs text-gray-400 mb-2">投稿先プラットフォーム（複数選択可）</p>
+        <div class="flex flex-wrap gap-3" id="platform-selector">
+          <!-- JS で生成 -->
+        </div>
+      </div>
+
+      <!-- Topic -->
+      <div>
+        <p class="text-xs text-gray-400 mb-2">投稿テーマ</p>
+        <div class="flex gap-2">
+          <input id="topic-input" type="text" placeholder="例: AIエージェントで業務を自動化した実例"
+            class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+          <button id="topic-random"
+            class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm transition" title="トピックをランダム選択">
+            🎲
+          </button>
+        </div>
+      </div>
+
+      <!-- Audience + Category -->
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <p class="text-xs text-gray-400 mb-2">ターゲット</p>
+          <input id="audience-input" type="text" placeholder="例: 20〜40代ビジネスパーソン"
+            class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+        </div>
+        <div>
+          <p class="text-xs text-gray-400 mb-2">カテゴリ</p>
+          <select id="category-select"
+            class="bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+            <option value="general">general</option>
+            <option value="ai_tech">ai_tech</option>
+            <option value="llm">llm</option>
+            <option value="sns_automation">sns_automation</option>
+            <option value="creator_economy">creator_economy</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" id="dry-run-check" class="rounded" />
+          <span class="text-gray-300">ドライラン（投稿しない）</span>
+        </label>
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <input type="checkbox" id="auto-approve-check" class="rounded" />
+          <span class="text-gray-300">生成後すぐ投稿</span>
+        </label>
+      </div>
+
+      <!-- Generate button -->
+      <button id="generate-btn"
+        class="w-full py-3 bg-violet-600 hover:bg-violet-500 active:bg-violet-700 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed">
+        生成する
+      </button>
+      <div id="generate-error" class="text-red-400 text-sm hidden"></div>
+    </section>
+
+    <!-- Jobs list -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-white">ジョブ履歴</h2>
+        <button id="refresh-btn" class="text-xs text-gray-400 hover:text-white transition">↻ 更新</button>
+      </div>
+      <div id="jobs-list" class="space-y-3">
+        <div class="text-gray-500 text-sm text-center py-8">読み込み中...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Job detail modal -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold" id="modal-title">コンテンツ確認</h3>
+        <button id="modal-close" class="text-gray-400 hover:text-white text-xl">✕</button>
+      </div>
+      <div id="modal-body"></div>
+      <div id="modal-actions" class="flex gap-3"></div>
+    </div>
+  </div>
+
+<script>
+const API = '/api';
+let API_KEY = localStorage.getItem('sns_api_key') || '';
+const TOPICS = [];
+
+// API キー設定（初回）
+if (!API_KEY) {
+  API_KEY = prompt('API キーを入力してください（.env の API_KEY）') || '';
+  localStorage.setItem('sns_api_key', API_KEY);
+}
+
+const headers = () => ({ 'Content-Type': 'application/json', 'x-api-key': API_KEY });
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, { ...opts, headers: headers() });
+  if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+  return res.json();
+}
+
+// ── Platforms ──────────────────────────────────────────────────────
+const PLATFORMS = [
+  { id: 'threads',   label: 'Threads',   emoji: '🧵', color: 'violet', available: true  },
+  { id: 'twitter',   label: 'X (Twitter)', emoji: '𝕏', color: 'sky',    available: false },
+  { id: 'tiktok',    label: 'TikTok',    emoji: '🎵', color: 'pink',   available: false },
+  { id: 'instagram', label: 'Instagram', emoji: '📸', color: 'orange', available: false },
+  { id: 'youtube',   label: 'YouTube',   emoji: '▶', color: 'red',    available: false },
+];
+
+const colorMap = {
+  violet: 'checked:bg-violet-600 border-violet-600',
+  sky:    'checked:bg-sky-500 border-sky-500',
+  pink:   'checked:bg-pink-500 border-pink-500',
+  orange: 'checked:bg-orange-500 border-orange-500',
+  red:    'checked:bg-red-600 border-red-600',
+};
+
+function renderPlatforms() {
+  const el = document.getElementById('platform-selector');
+  el.innerHTML = PLATFORMS.map(p => `
+    <label class="flex items-center gap-2 px-4 py-2 rounded-full border cursor-pointer transition select-none
+      ${p.available
+        ? 'border-gray-600 hover:border-gray-400 has-[:checked]:border-violet-500 has-[:checked]:bg-violet-500/10'
+        : 'border-gray-700 opacity-40 cursor-not-allowed'}">
+      <input type="checkbox" value="${p.id}" class="hidden" ${p.available ? '' : 'disabled'}
+        ${p.id === 'threads' ? 'checked' : ''} />
+      <span>${p.emoji}</span>
+      <span class="text-sm font-medium">${p.label}</span>
+      ${!p.available ? '<span class="text-xs text-gray-500 ml-1">設定未了</span>' : ''}
+    </label>
+  `).join('');
+}
+
+function selectedPlatforms() {
+  return [...document.querySelectorAll('#platform-selector input:checked')].map(i => i.value);
+}
+
+// ── Topics ─────────────────────────────────────────────────────────
+async function loadTopics() {
+  try {
+    const res = await fetch('/topics.json');
+    const data = await res.json();
+    TOPICS.push(...data);
+  } catch {}
+}
+
+document.getElementById('topic-random').addEventListener('click', () => {
+  if (!TOPICS.length) return;
+  const t = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+  document.getElementById('topic-input').value = t.topic;
+  document.getElementById('audience-input').value = t.targetAudience || '';
+  document.getElementById('category-select').value = t.category || 'general';
+});
+
+// ── Generate ────────────────────────────────────────────────────────
+document.getElementById('generate-btn').addEventListener('click', async () => {
+  const topic = document.getElementById('topic-input').value.trim();
+  const errEl = document.getElementById('generate-error');
+  errEl.classList.add('hidden');
+
+  if (!topic) { errEl.textContent = 'テーマを入力してください'; errEl.classList.remove('hidden'); return; }
+  const platforms = selectedPlatforms();
+  if (!platforms.length) { errEl.textContent = 'プラットフォームを1つ以上選択してください'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+
+  try {
+    await api('/jobs', {
+      method: 'POST',
+      body: JSON.stringify({
+        topic,
+        platforms,
+        targetAudience: document.getElementById('audience-input').value || '一般',
+        category: document.getElementById('category-select').value,
+        dryRun: document.getElementById('dry-run-check').checked,
+        autoApprove: document.getElementById('auto-approve-check').checked,
+      }),
+    });
+    btn.textContent = '生成開始！';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '生成する'; }, 2000);
+    await loadJobs();
+    // 3秒後に再読み込み（バックグラウンドで処理が進むため）
+    setTimeout(loadJobs, 3000);
+    setTimeout(loadJobs, 8000);
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = '生成する';
+  }
+});
+
+// ── Jobs ────────────────────────────────────────────────────────────
+const STATUS_LABEL = {
+  running:           { text: '生成中',     dot: 'bg-yellow-400 spinning', badge: 'bg-yellow-900 text-yellow-300' },
+  awaiting_approval: { text: '承認待ち',   dot: 'bg-blue-400',   badge: 'bg-blue-900 text-blue-300' },
+  approved:          { text: '承認済み',   dot: 'bg-indigo-400', badge: 'bg-indigo-900 text-indigo-300' },
+  completed:         { text: '投稿完了',   dot: 'bg-green-400',  badge: 'bg-green-900 text-green-300' },
+  failed:            { text: 'エラー',     dot: 'bg-red-400',    badge: 'bg-red-900 text-red-300' },
+};
+
+async function loadJobs() {
+  try {
+    const { jobs } = await api('/jobs');
+    renderJobs(jobs);
+  } catch (e) {
+    document.getElementById('jobs-list').innerHTML =
+      `<div class="text-red-400 text-sm text-center py-8">取得エラー: ${e.message}</div>`;
+  }
+}
+
+function renderJobs(jobs) {
+  const el = document.getElementById('jobs-list');
+  if (!jobs.length) {
+    el.innerHTML = '<div class="text-gray-500 text-sm text-center py-8">まだジョブがありません</div>';
+    return;
+  }
+  el.innerHTML = jobs.map(j => {
+    const s = STATUS_LABEL[j.status] || { text: j.status, dot: 'bg-gray-400', badge: 'bg-gray-800 text-gray-300' };
+    const platforms = JSON.parse(j.platforms || '[]');
+    const createdAt = new Date(j.created_at).toLocaleString('ja-JP', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    return `
+      <div class="bg-gray-900 rounded-xl px-5 py-4 flex items-center gap-4 hover:bg-gray-800 transition cursor-pointer"
+        onclick="openJob('${j.id}')">
+        <span class="status-dot ${s.dot}"></span>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate">${j.topic || '(トピックなし)'}</p>
+          <p class="text-xs text-gray-400 mt-0.5">${createdAt} · ${platforms.join(', ')}</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full shrink-0 ${s.badge}">${s.text}</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Job Modal ────────────────────────────────────────────────────────
+async function openJob(jobId) {
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.getElementById('modal-overlay').classList.add('flex');
+  document.getElementById('modal-body').innerHTML = '<div class="text-gray-400 text-sm text-center py-8">読み込み中...</div>';
+  document.getElementById('modal-actions').innerHTML = '';
+
+  try {
+    const { job, contents } = await api(`/jobs/${jobId}/preview`);
+    document.getElementById('modal-title').textContent = job.topic || 'コンテンツ確認';
+
+    const s = STATUS_LABEL[job.status] || { badge: 'bg-gray-800 text-gray-300', text: job.status };
+    const platforms = JSON.parse(job.platforms || '[]');
+
+    document.getElementById('modal-body').innerHTML = `
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-xs px-2.5 py-1 rounded-full ${s.badge}">${s.text}</span>
+        <span class="text-xs text-gray-400">${platforms.join(', ')}</span>
+      </div>
+      ${contents.length ? contents.map(c => `
+        <div class="bg-gray-800 rounded-xl p-4 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-violet-400 uppercase">${c.platform} · Variant ${c.variant_id || 'A'}</span>
+          </div>
+          <p class="text-sm whitespace-pre-wrap leading-relaxed">${c.body || ''}</p>
+          ${c.metadata ? (() => {
+            try {
+              const m = JSON.parse(c.metadata);
+              return m.hashtags?.length
+                ? `<p class="text-xs text-blue-400 mt-2">${m.hashtags.join(' ')}</p>` : '';
+            } catch { return ''; }
+          })() : ''}
+        </div>
+      `).join('') : '<p class="text-gray-500 text-sm">コンテンツがまだありません</p>'}
+    `;
+
+    const actions = document.getElementById('modal-actions');
+    if (job.status === 'awaiting_approval') {
+      actions.innerHTML = `
+        <button onclick="approveJob('${job.id}')"
+          class="flex-1 py-2.5 bg-green-600 hover:bg-green-500 rounded-xl text-sm font-semibold transition">
+          ✓ 承認して投稿
+        </button>
+        <button onclick="publishDryRun('${job.id}')"
+          class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm transition">
+          ドライラン
+        </button>`;
+    } else if (job.status === 'approved') {
+      actions.innerHTML = `
+        <button onclick="publishJob('${job.id}')"
+          class="flex-1 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-semibold transition">
+          投稿する
+        </button>`;
+    }
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = `<p class="text-red-400">${e.message}</p>`;
+  }
+}
+
+async function approveJob(jobId) {
+  try {
+    await api(`/jobs/${jobId}/approve`, { method: 'POST', body: '{}' });
+    await api(`/jobs/${jobId}/publish`, { method: 'POST', body: JSON.stringify({ dryRun: false }) });
+    closeModal();
+    await loadJobs();
+  } catch (e) {
+    alert('エラー: ' + e.message);
+  }
+}
+
+async function publishJob(jobId) {
+  try {
+    await api(`/jobs/${jobId}/publish`, { method: 'POST', body: JSON.stringify({ dryRun: false }) });
+    closeModal();
+    await loadJobs();
+  } catch (e) {
+    alert('エラー: ' + e.message);
+  }
+}
+
+async function publishDryRun(jobId) {
+  try {
+    await api(`/jobs/${jobId}/publish`, { method: 'POST', body: JSON.stringify({ dryRun: true }) });
+    alert('ドライラン完了（実際には投稿しません）');
+  } catch (e) {
+    alert('エラー: ' + e.message);
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-overlay').classList.remove('flex');
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── Scheduler ──────────────────────────────────────────────────────
+async function loadSchedulerStatus() {
+  try {
+    const s = await api('/scheduler/status');
+    const dot = document.getElementById('scheduler-dot');
+    const label = document.getElementById('scheduler-label');
+    const btn = document.getElementById('scheduler-toggle');
+    if (s.isRunning) {
+      dot.className = 'status-dot bg-green-400';
+      label.textContent = `自動投稿: ON（${(s.postTimes || [s.postTime]).join(', ')} JST）`;
+      btn.textContent = '停止';
+      btn.onclick = stopScheduler;
+    } else {
+      dot.className = 'status-dot bg-gray-500';
+      label.textContent = 'スケジューラー: 停止中';
+      btn.textContent = '起動';
+      btn.onclick = startScheduler;
+    }
+  } catch {}
+}
+
+async function startScheduler() {
+  await api('/scheduler/start', { method: 'POST', body: '{}' });
+  await loadSchedulerStatus();
+}
+
+async function stopScheduler() {
+  await api('/scheduler/stop', { method: 'POST', body: '{}' });
+  await loadSchedulerStatus();
+}
+
+document.getElementById('refresh-btn').addEventListener('click', loadJobs);
+
+// ── Init ────────────────────────────────────────────────────────────
+renderPlatforms();
+loadTopics();
+loadJobs();
+loadSchedulerStatus();
+setInterval(loadJobs, 10000);
+setInterval(loadSchedulerStatus, 15000);
+</script>
+</body>
+</html>

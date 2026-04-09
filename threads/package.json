@@ -1,0 +1,19 @@
+{
+  "name": "threads-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "post": "node cli.js post",
+    "dry": "node cli.js post --dry-run",
+    "schedule": "node cli.js schedule"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "better-sqlite3": "^12.8.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "express": "^5.2.1",
+    "node-cron": "^3.0.0",
+    "openai": "^6.33.0"
+  }
+}

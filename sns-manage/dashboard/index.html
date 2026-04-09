@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS管理ダッシュボード</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #a9c4ff;
+      margin-bottom: 24px;
+      letter-spacing: 0.03em;
+    }
+
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #8ba8e0;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Error bar */
+    #error-bar {
+      display: none;
+      background: #4a1a1a;
+      border: 1px solid #c0392b;
+      color: #ff7675;
+      padding: 10px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    #error-bar.visible { display: flex; align-items: center; gap: 10px; }
+    #error-bar button {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #ff7675;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+    }
+
+    /* Tab navigation */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #1e2d50;
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #556888;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      padding: 8px 16px;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      letter-spacing: 0.03em;
+    }
+    .tab-btn:hover { color: #a9c4ff; }
+    .tab-btn.active {
+      color: #a9c4ff;
+      border-bottom-color: #4a7fd4;
+    }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Card */
+    .card {
+      background: #16213e;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #1e2d50;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #8ba8e0;
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      background: #0f1929;
+      border: 1px solid #2a3f6e;
+      color: #e0e0e0;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: #4a7fd4;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .platforms-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .platform-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f1929;
+      border: 1px solid #2a3f6e;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: border-color 0.15s;
+    }
+    .platform-check:has(input:checked) {
+      border-color: #4a7fd4;
+      background: #1a2d50;
+    }
+    .platform-check input[type="checkbox"] {
+      accent-color: #4a7fd4;
+      width: 14px;
+      height: 14px;
+    }
+
+    .dryrun-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #a0b8d8;
+    }
+    .dryrun-row input[type="checkbox"] {
+      accent-color: #4a7fd4;
+      width: 15px;
+      height: 15px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-primary { background: #2563eb; color: #fff; width: 100%; justify-content: center; }
+    .btn-approve { background: #0e7490; color: #fff; }
+    .btn-publish { background: #15803d; color: #fff; }
+    .btn-preview { background: #374151; color: #d1d5db; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-secondary { background: #1e2d50; color: #8ba8e0; }
+    .btn-danger { background: #7f1d1d; color: #fca5a5; }
+    .btn-success { background: #14532d; color: #86efac; }
+
+    /* Jobs list */
+    #jobs-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .job-card {
+      background: #16213e;
+      border-radius: 10px;
+      border: 1px solid #1e2d50;
+      overflow: hidden;
+    }
+    .job-card.status-running    { border-left: 4px solid #f59e0b; }
+    .job-card.status-awaiting_approval { border-left: 4px solid #3b82f6; }
+    .job-card.status-approved   { border-left: 4px solid #6366f1; }
+    .job-card.status-completed  { border-left: 4px solid #22c55e; }
+    .job-card.status-failed     { border-left: 4px solid #ef4444; }
+
+    .job-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+
+    .job-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+    .badge-running    { background: #451a03; color: #f59e0b; border: 1px solid #92400e; }
+    .badge-awaiting_approval { background: #172554; color: #60a5fa; border: 1px solid #1d4ed8; }
+    .badge-approved   { background: #1e1b4b; color: #a5b4fc; border: 1px solid #4338ca; }
+    .badge-completed  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .badge-failed     { background: #450a0a; color: #f87171; border: 1px solid #991b1b; }
+
+    .job-topic {
+      font-size: 14px;
+      font-weight: 600;
+      color: #c8d8f0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .job-time {
+      font-size: 12px;
+      color: #556888;
+      white-space: nowrap;
+    }
+
+    .job-meta {
+      padding: 0 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .job-platforms {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .platform-tag {
+      background: #1a2d50;
+      border: 1px solid #2a4070;
+      color: #8ba8e0;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .job-id {
+      font-size: 11px;
+      color: #3a5070;
+      font-family: monospace;
+    }
+
+    .job-actions {
+      padding: 10px 16px 14px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid #1e2d50;
+    }
+
+    /* Preview area (accordion) */
+    .preview-area {
+      display: none;
+      padding: 14px 16px;
+      border-top: 1px solid #1e2d50;
+      background: #0f1929;
+    }
+    .preview-area.open { display: block; }
+
+    .preview-title {
+      font-size: 12px;
+      color: #8ba8e0;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .preview-posts { display: flex; flex-direction: column; gap: 12px; }
+
+    .post-item {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .post-platform {
+      font-size: 11px;
+      font-weight: 700;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .post-content {
+      font-size: 13px;
+      color: #c8d8f0;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    .post-hashtags {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #3b82f6;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #3a5070;
+      font-size: 14px;
+    }
+
+    /* Polling indicator */
+    #poll-indicator {
+      position: fixed;
+      bottom: 16px;
+      right: 20px;
+      font-size: 11px;
+      color: #3a5070;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #poll-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      opacity: 0.5;
+      transition: opacity 0.3s;
+    }
+    #poll-dot.pulse { opacity: 1; }
+
+    /* KPI cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: #556888;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #a9c4ff;
+      line-height: 1;
+    }
+    .kpi-value.positive { color: #4ade80; }
+    .kpi-value.negative { color: #f87171; }
+
+    /* Top posts table */
+    .top-posts {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .top-posts-header {
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #8ba8e0;
+      border-bottom: 1px solid #1e2d50;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .top-post-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-bottom: 1px solid #0f1929;
+      font-size: 13px;
+    }
+    .top-post-row:last-child { border-bottom: none; }
+    .top-post-platform {
+      font-size: 11px;
+      font-weight: 700;
+      color: #60a5fa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      min-width: 80px;
+    }
+    .top-post-rate {
+      color: #4ade80;
+      font-weight: 600;
+      min-width: 60px;
+    }
+    .top-post-url {
+      color: #556888;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .top-post-url a { color: #4a7fd4; text-decoration: none; }
+    .top-post-url a:hover { text-decoration: underline; }
+
+    /* Tab toolbar */
+    .tab-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* Chart container */
+    .chart-container {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+    }
+    .chart-container canvas {
+      max-height: 360px;
+    }
+
+    /* PDCA report */
+    .report-header-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .report-stat {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .report-stat-label {
+      font-size: 11px;
+      color: #556888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .report-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #a9c4ff;
+    }
+    .report-body {
+      background: #0f1929;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .report-body pre {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: #c8d8f0;
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    /* Scheduler */
+    .scheduler-status {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .status-row:last-child { margin-bottom: 0; }
+    .status-label {
+      color: #556888;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      min-width: 120px;
+    }
+    .status-value { color: #c8d8f0; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .status-dot.running { background: #22c55e; }
+    .status-dot.stopped { background: #ef4444; }
+    .scheduler-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .topics-note {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 13px;
+      color: #8ba8e0;
+      line-height: 1.6;
+    }
+    .topics-note code {
+      background: #0f1929;
+      border: 1px solid #2a3f6e;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #a9c4ff;
+    }
+
+    /* 週次レポート */
+    .weekly-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .weekly-period {
+      font-size: 15px;
+      font-weight: 600;
+      color: #a9c4ff;
+    }
+    .weekly-generated {
+      font-size: 12px;
+      color: #556888;
+      margin-top: 4px;
+    }
+
+    .kpi-compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .kpi-compare-card {
+      background: #16213e;
+      border: 1px solid #1e2d50;
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .kpi-compare-label {
+      font-size: 11px;
+      color: #556888;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .kpi-compare-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: #e0e0e0;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .kpi-compare-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .change-up   { background: rgba(74,222,128,0.12); color: #4ade80; }
+    .change-down { background: rgba(248,113,113,0.12); color: #f87171; }
+    .change-flat { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+    .weekly-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .weekly-two-col { grid-template-columns: 1fr; }
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 768px) {
+      .highlights-grid { grid-template-columns: 1fr; }
+    }
+    .highlight-card {
+      border-radius: 10px;
+      padding: 16px 18px;
+      border: 1px solid;
+    }
+    .highlight-good {
+      background: rgba(5,46,22,0.6);
+      border-color: #166534;
+    }
+    .highlight-bad {
+      background: rgba(69,10,10,0.6);
+      border-color: #991b1b;
+    }
+    .highlight-type {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .highlight-good .highlight-type { color: #4ade80; }
+    .highlight-bad  .highlight-type { color: #f87171; }
+    .highlight-metric {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c8d8f0;
+      margin-bottom: 4px;
+    }
+    .highlight-desc {
+      font-size: 13px;
+      color: #8ba8e0;
+      line-height: 1.5;
+    }
+
+    .suggestions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .suggestion-item {
+      display: flex;
+      gap: 14px;
+      background: #0f1929;
+      border: 1px solid #1e2d50;
+      border-radius: 8px;
+      padding: 14px 16px;
+      align-items: flex-start;
+    }
+    .suggestion-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .suggestion-body { flex: 1; }
+    .suggestion-category {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #60a5fa;
+      margin-bottom: 4px;
+    }
+    .suggestion-action {
+      font-size: 14px;
+      font-weight: 600;
+      color: #c8d8f0;
+      margin-bottom: 4px;
+    }
+    .suggestion-effect {
+      font-size: 12px;
+      color: #556888;
+    }
+
+    .focus-card {
+      background: #1a1a3e;
+      border: 1px solid #3b3b8a;
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .focus-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #818cf8;
+      margin-bottom: 8px;
+    }
+    .focus-text {
+      font-size: 14px;
+      color: #c8d8f0;
+      line-height: 1.6;
+    }
+    .risk-card {
+      background: #2d1a0a;
+      border: 1px solid #92400e;
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .risk-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #f59e0b;
+      margin-bottom: 8px;
+    }
+    .risk-text {
+      font-size: 14px;
+      color: #c8d8f0;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<h1>SNS管理ダッシュボード</h1>
+
+<div id="error-bar">
+  <span id="error-msg"></span>
+  <button onclick="hideError()" title="閉じる">✕</button>
+</div>
+
+<!-- Tab navigation -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('advisor')">提案</button>
+  <button class="tab-btn" onclick="switchTab('weekly')">週次レポート</button>
+  <button class="tab-btn" onclick="switchTab('jobs')">ジョブ管理</button>
+  <button class="tab-btn" onclick="switchTab('kpi')">KPIサマリー</button>
+  <button class="tab-btn" onclick="switchTab('chart')">グラフ</button>
+  <button class="tab-btn" onclick="switchTab('pdca')">PDCAレポート</button>
+  <button class="tab-btn" onclick="switchTab('scheduler')">スケジューラー</button>
+</nav>
+
+<!-- Tab: 提案 (11_advisor) -->
+<div id="tab-advisor" class="tab-panel active">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div>
+      <div id="advisor-generated" style="color:#556888;font-size:13px"></div>
+      <div id="advisor-quality-badge" style="margin-top:4px"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="loadAdvisor()">再読み込み</button>
+      <button class="btn btn-secondary btn-sm" id="advisor-gen-btn" onclick="generateAdvisor()">AIアドバイス生成</button>
+      <button class="btn btn-primary btn-sm" id="advisor-apply-btn" onclick="applyAdvisorPlan()" style="display:none">このプランを適用</button>
+    </div>
+  </div>
+
+  <!-- 勝っている訴求軸 -->
+  <div class="card" style="margin-bottom:20px">
+    <h2>勝っている訴求軸</h2>
+    <div id="advisor-axis" class="empty-state">データなし</div>
+  </div>
+
+  <!-- 今週の投稿プラン -->
+  <div class="card" style="margin-bottom:20px">
+    <h2>今週の投稿プラン</h2>
+    <div id="advisor-weekly-plan" class="empty-state">データなし</div>
+  </div>
+
+  <!-- 次にテストすべき仮説 -->
+  <div class="card" style="margin-bottom:20px">
+    <h2>次にテストすべき仮説</h2>
+    <div id="advisor-hypotheses" class="empty-state">データなし</div>
+  </div>
+
+  <!-- 最適投稿時刻 + リスク警告 -->
+  <div class="weekly-two-col" style="margin-bottom:20px">
+    <div class="card">
+      <h2>最適投稿時刻</h2>
+      <div id="advisor-times" class="empty-state">データなし</div>
+    </div>
+    <div class="card">
+      <h2>リスク警告</h2>
+      <div id="advisor-risks" class="empty-state">データなし</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 0: 週次レポート -->
+<div id="tab-weekly" class="tab-panel">
+  <!-- ヘッダー: 期間表示 + 手動実行ボタン -->
+  <div class="weekly-header">
+    <div>
+      <div class="weekly-period" id="weekly-period">期間: 読み込み中...</div>
+      <div class="weekly-generated" id="weekly-generated"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="loadWeekly()">再読み込み</button>
+      <button class="btn btn-secondary btn-sm" id="snapshot-btn" onclick="takeSnapshot()">スナップショット取得</button>
+      <button class="btn btn-secondary btn-sm" id="generate-btn" onclick="generateReport()">AIレポート生成</button>
+    </div>
+  </div>
+
+  <!-- KPIカード5枚 -->
+  <div class="kpi-compare-grid" id="weekly-kpis">
+    <!-- JavaScriptで生成 -->
+  </div>
+
+  <!-- AIサマリー + ハイライト -->
+  <div class="weekly-two-col">
+    <!-- 左: AIサマリー -->
+    <div class="card" id="weekly-summary-card">
+      <h2>今週の総評</h2>
+      <div id="weekly-summary" class="empty-state">データなし</div>
+    </div>
+    <!-- 右: 注目ポスト -->
+    <div class="card" id="weekly-toppost-card">
+      <h2>今週のベスト投稿</h2>
+      <div id="weekly-toppost" class="empty-state">データなし</div>
+    </div>
+  </div>
+
+  <!-- ハイライト（良かった/悪かった） -->
+  <div class="highlights-grid" id="weekly-highlights">
+    <!-- JavaScriptで生成 -->
+  </div>
+
+  <!-- 改善提案 -->
+  <div class="card" style="margin-bottom:24px">
+    <h2>改善提案</h2>
+    <div class="suggestions-list" id="weekly-suggestions">
+      <div class="empty-state">データなし</div>
+    </div>
+  </div>
+
+  <!-- 来週フォーカス + リスクアラート -->
+  <div class="weekly-two-col" style="margin-bottom:24px" id="weekly-focus-row">
+  </div>
+
+  <!-- 2週間トレンドチャート -->
+  <div class="chart-container">
+    <h2 style="margin-bottom:14px">2週間トレンド</h2>
+    <canvas id="weekly-chart"></canvas>
+  </div>
+</div>
+
+<!-- Tab 1: ジョブ管理 -->
+<div id="tab-jobs" class="tab-panel">
+  <div class="layout">
+    <!-- Left: Pipeline form -->
+    <div class="card">
+      <h2>パイプライン起動</h2>
+
+      <div class="form-group">
+        <label for="topic-input">トピック</label>
+        <textarea id="topic-input" placeholder="例: 夏の新商品キャンペーン、ECサイトのセール告知など" rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>プラットフォーム</label>
+        <div class="platforms-grid">
+          <label class="platform-check">
+            <input type="checkbox" value="twitter" checked> Twitter / X
+          </label>
+          <label class="platform-check">
+            <input type="checkbox" value="instagram"> Instagram
+          </label>
+          <label class="platform-check">
+            <input type="checkbox" value="facebook"> Facebook
+          </label>
+          <label class="platform-check">
+            <input type="checkbox" value="linkedin"> LinkedIn
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="dryrun-row">
+          <input type="checkbox" id="dry-run-check">
+          ドライラン（投稿せず確認のみ）
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="start-btn" onclick="startPipeline()">
+        パイプライン起動
+      </button>
+    </div>
+
+    <!-- Right: Jobs list -->
+    <div>
+      <h2>ジョブ一覧</h2>
+      <div id="jobs-list">
+        <div class="empty-state">読み込み中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2: KPIサマリー -->
+<div id="tab-kpi" class="tab-panel">
+  <div class="tab-toolbar">
+    <button class="btn btn-secondary btn-sm" onclick="loadKpi()">再読み込み</button>
+  </div>
+  <div id="kpi-content">
+    <div class="empty-state">読み込み中...</div>
+  </div>
+</div>
+
+<!-- Tab 3: グラフ -->
+<div id="tab-chart" class="tab-panel">
+  <div class="tab-toolbar">
+    <button class="btn btn-secondary btn-sm" id="chart-7d-btn" onclick="loadChart(7)" style="opacity:1">7日</button>
+    <button class="btn btn-secondary btn-sm" id="chart-30d-btn" onclick="loadChart(30)">30日</button>
+    <button class="btn btn-secondary btn-sm" onclick="loadChart(chartDays)" style="margin-left:8px">再読み込み</button>
+  </div>
+  <div class="chart-container">
+    <canvas id="engagement-chart"></canvas>
+  </div>
+</div>
+
+<!-- Tab 4: PDCAレポート -->
+<div id="tab-pdca" class="tab-panel">
+  <div class="tab-toolbar">
+    <button class="btn btn-secondary btn-sm" onclick="loadPdca()">再読み込み</button>
+  </div>
+  <div id="pdca-content">
+    <div class="empty-state">読み込み中...</div>
+  </div>
+</div>
+
+<!-- Tab 5: スケジューラー -->
+<div id="tab-scheduler" class="tab-panel">
+  <div class="tab-toolbar">
+    <button class="btn btn-secondary btn-sm" onclick="loadScheduler()">再読み込み</button>
+  </div>
+  <div id="scheduler-content">
+    <div class="empty-state">読み込み中...</div>
+  </div>
+</div>
+
+<div id="poll-indicator">
+  <span id="poll-dot"></span>
+  自動更新 5秒
+</div>
+
+<script>
+  // ---- 設定 ----
+  const API_BASE = 'http://localhost:3000/api';
+  let API_KEY = localStorage.getItem('sns_api_key') || '';
+
+  // ---- タブ状態 ----
+  let currentTab = 'weekly';
+  let chartInstance = null;
+  let chartDays = 7;
+  let weeklyChartInstance = null;
+
+  // ---- 初期化 ----
+  (function init() {
+    if (!API_KEY) {
+      const key = prompt('APIキーを入力してください:');
+      if (key) {
+        API_KEY = key.trim();
+        localStorage.setItem('sns_api_key', API_KEY);
+      }
+    }
+    loadAdvisor();
+    loadJobs();
+    setInterval(() => {
+      if (currentTab === 'jobs') {
+        pulseDot();
+        loadJobs();
+      }
+    }, 5000);
+  })();
+
+  // ---- タブ切り替え ----
+  function switchTab(tab) {
+    currentTab = tab;
+
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById('tab-' + tab).classList.add('active');
+    const btns = document.querySelectorAll('.tab-btn');
+    const tabOrder = ['advisor', 'weekly', 'jobs', 'kpi', 'chart', 'pdca', 'scheduler'];
+    const idx = tabOrder.indexOf(tab);
+    if (idx >= 0) btns[idx].classList.add('active');
+
+    if (tab === 'advisor') loadAdvisor();
+    if (tab === 'weekly') loadWeekly();
+    if (tab === 'kpi') loadKpi();
+    if (tab === 'chart') loadChart(chartDays);
+    if (tab === 'pdca') loadPdca();
+    if (tab === 'scheduler') loadScheduler();
+  }
+
+  // ---- ユーティリティ ----
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function showError(msg) {
+    const bar = document.getElementById('error-bar');
+    document.getElementById('error-msg').textContent = msg;
+    bar.classList.add('visible');
+  }
+
+  function hideError() {
+    document.getElementById('error-bar').classList.remove('visible');
+  }
+
+  function pulseDot() {
+    const dot = document.getElementById('poll-dot');
+    dot.classList.add('pulse');
+    setTimeout(() => dot.classList.remove('pulse'), 500);
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function statusBadge(status) {
+    const labels = {
+      running: '実行中',
+      awaiting_approval: '承認待ち',
+      approved: '承認済み',
+      completed: '完了',
+      failed: '失敗',
+    };
+    const label = escapeHtml(labels[status] || status);
+    return `<span class="job-status badge-${escapeHtml(status)}">${label}</span>`;
+  }
+
+  // ---- API ヘルパー ----
+  async function apiCall(method, path, body) {
+    const res = await fetch(API_BASE + path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
+    return res.json();
+  }
+
+  // ---- パイプライン起動 ----
+  async function startPipeline() {
+    hideError();
+    const topic = document.getElementById('topic-input').value.trim();
+    if (!topic) {
+      showError('トピックを入力してください。');
+      return;
+    }
+
+    const platformCheckboxes = document.querySelectorAll('.platforms-grid input[type="checkbox"]:checked');
+    const platforms = Array.from(platformCheckboxes).map(cb => cb.value);
+    if (platforms.length === 0) {
+      showError('プラットフォームを1つ以上選択してください。');
+      return;
+    }
+
+    const dryRun = document.getElementById('dry-run-check').checked;
+
+    const btn = document.getElementById('start-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 起動中...';
+
+    try {
+      await apiCall('POST', '/jobs', { topic, platforms, dryRun });
+      document.getElementById('topic-input').value = '';
+      document.getElementById('dry-run-check').checked = false;
+      await loadJobs();
+    } catch (e) {
+      showError(e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'パイプライン起動';
+    }
+  }
+
+  // ---- ジョブ一覧 ----
+  async function loadJobs() {
+    try {
+      const data = await apiCall('GET', '/jobs');
+      const jobs = Array.isArray(data) ? data : (data.jobs || []);
+      renderJobs(jobs);
+    } catch (e) {
+      // ポーリングエラーはサイレントに（初回以外はerrror-barを更新しない）
+    }
+  }
+
+  function renderJobs(jobs) {
+    const list = document.getElementById('jobs-list');
+
+    if (!jobs || jobs.length === 0) {
+      list.innerHTML = '<div class="empty-state">ジョブがありません。パイプラインを起動してください。</div>';
+      return;
+    }
+
+    // 既存の展開状態を保持
+    const openPreviews = new Set();
+    list.querySelectorAll('.preview-area.open').forEach(el => {
+      const card = el.closest('.job-card');
+      if (card) openPreviews.add(card.dataset.jobId);
+    });
+
+    // 新しいカードを描画（innerHTML は使わず DOM 操作）
+    const fragment = document.createDocumentFragment();
+
+    jobs.forEach(job => {
+      const card = document.createElement('div');
+      const safeStatus = /^[a-z_]+$/.test(job.status || '') ? job.status : 'unknown';
+      card.className = `job-card status-${safeStatus}`;
+      card.dataset.jobId = job.id;
+
+      const platforms = Array.isArray(job.platforms) ? job.platforms : [];
+      const platformTags = platforms.map(p => `<span class="platform-tag">${escapeHtml(p)}</span>`).join('');
+
+      const actions = buildActions(job);
+
+      card.innerHTML = `
+        <div class="job-header">
+          ${statusBadge(job.status)}
+          <span class="job-topic"></span>
+          <span class="job-time">${escapeHtml(formatDate(job.created_at))}</span>
+        </div>
+        <div class="job-meta">
+          <div class="job-platforms">${platformTags}</div>
+          <span class="job-id"></span>
+        </div>
+        <div class="job-actions">${actions}</div>
+        <div class="preview-area" id="preview-${escapeHtml(job.id)}">
+          <div class="preview-title">コンテンツプレビュー</div>
+          <div class="preview-posts">読み込み中...</div>
+        </div>
+      `;
+
+      // XSS対策: textContent で安全に設定
+      card.querySelector('.job-topic').textContent = job.topic || '(無題)';
+      card.querySelector('.job-id').textContent = `ID: ${job.id}`;
+
+      if (openPreviews.has(job.id)) {
+        const pa = card.querySelector('.preview-area');
+        if (pa) pa.classList.add('open');
+        renderPreviewContent(job.id, card.querySelector('.preview-posts'));
+      }
+
+      fragment.appendChild(card);
+    });
+
+    list.innerHTML = '';
+    list.appendChild(fragment);
+  }
+
+  function buildActions(job) {
+    const id = escapeHtml(job.id);
+    let html = `<button class="btn btn-preview btn-sm" onclick="showPreview('${id}')">プレビュー</button>`;
+
+    if (job.status === 'awaiting_approval') {
+      html += `<button class="btn btn-approve btn-sm" onclick="approveJob('${id}')">承認して投稿準備</button>`;
+    }
+    if (job.status === 'approved') {
+      html += `<button class="btn btn-publish btn-sm" onclick="publishJob('${id}')">投稿する</button>`;
+    }
+
+    return html;
+  }
+
+  // ---- プレビュー ----
+  async function showPreview(jobId) {
+    const previewEl = document.getElementById(`preview-${jobId}`);
+    if (!previewEl) return;
+
+    const isOpen = previewEl.classList.contains('open');
+    previewEl.classList.toggle('open', !isOpen);
+    if (isOpen) return; // 閉じた場合は何もしない
+
+    const postsEl = previewEl.querySelector('.preview-posts');
+    postsEl.textContent = '読み込み中...';
+
+    await renderPreviewContent(jobId, postsEl);
+  }
+
+  async function renderPreviewContent(jobId, postsEl) {
+    try {
+      const data = await apiCall('GET', `/jobs/${encodeURIComponent(jobId)}/preview`);
+      const posts = Array.isArray(data) ? data : (data.posts || []);
+
+      if (posts.length === 0) {
+        postsEl.textContent = 'コンテンツがまだ生成されていません。';
+        return;
+      }
+
+      postsEl.innerHTML = '';
+      posts.forEach(post => {
+        const item = document.createElement('div');
+        item.className = 'post-item';
+
+        const platformEl = document.createElement('div');
+        platformEl.className = 'post-platform';
+        platformEl.textContent = post.platform || '';
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'post-content';
+        contentEl.textContent = post.content || post.text || '';
+
+        item.appendChild(platformEl);
+        item.appendChild(contentEl);
+
+        if (post.hashtags && post.hashtags.length > 0) {
+          const tagsEl = document.createElement('div');
+          tagsEl.className = 'post-hashtags';
+          tagsEl.textContent = Array.isArray(post.hashtags)
+            ? post.hashtags.map(t => `#${t}`).join(' ')
+            : post.hashtags;
+          item.appendChild(tagsEl);
+        }
+
+        postsEl.appendChild(item);
+      });
+    } catch (e) {
+      postsEl.textContent = `プレビューの取得に失敗しました: ${e.message}`;
+    }
+  }
+
+  // ---- 承認 ----
+  async function approveJob(jobId) {
+    hideError();
+    try {
+      await apiCall('POST', `/jobs/${encodeURIComponent(jobId)}/approve`);
+      await loadJobs();
+    } catch (e) {
+      showError(`承認に失敗しました: ${e.message}`);
+    }
+  }
+
+  // ---- 投稿 ----
+  async function publishJob(jobId) {
+    if (!confirm('このジョブのコンテンツを投稿します。よろしいですか？')) return;
+    hideError();
+    try {
+      await apiCall('POST', `/jobs/${encodeURIComponent(jobId)}/publish`);
+      await loadJobs();
+    } catch (e) {
+      showError(`投稿に失敗しました: ${e.message}`);
+    }
+  }
+
+  // ---- KPIサマリー ----
+  async function loadKpi() {
+    const el = document.getElementById('kpi-content');
+    el.innerHTML = '<div class="empty-state">読み込み中...</div>';
+    try {
+      const data = await apiCall('GET', '/analytics/summary');
+      renderKpi(data);
+    } catch (e) {
+      el.innerHTML = '';
+      const msg = document.createElement('div');
+      msg.className = 'empty-state';
+      msg.textContent = `データの取得に失敗しました: ${e.message}`;
+      el.appendChild(msg);
+    }
+  }
+
+  function renderKpi(data) {
+    const el = document.getElementById('kpi-content');
+    el.innerHTML = '';
+
+    // KPI カード
+    const grid = document.createElement('div');
+    grid.className = 'kpi-grid';
+
+    const engRate = data.avgEngagementRate != null
+      ? (parseFloat(data.avgEngagementRate) * 100).toFixed(2) + '%'
+      : '--';
+    const followerDelta = data.totalFollowerDelta != null ? data.totalFollowerDelta : null;
+    const followerSign = followerDelta != null ? (followerDelta >= 0 ? '+' : '') : '';
+    const followerClass = followerDelta != null ? (followerDelta >= 0 ? 'positive' : 'negative') : '';
+
+    const metrics = [
+      { label: 'エンゲージメント率', value: engRate, cls: '' },
+      { label: '総リーチ', value: data.totalImpressions != null ? Number(data.totalImpressions).toLocaleString() : '--', cls: '' },
+      { label: 'フォロワー増加', value: followerDelta != null ? followerSign + Number(followerDelta).toLocaleString() : '--', cls: followerClass },
+      { label: 'リンククリック', value: data.totalLinkClicks != null ? Number(data.totalLinkClicks).toLocaleString() : '--', cls: '' },
+    ];
+
+    metrics.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'kpi-card';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'kpi-label';
+      lbl.textContent = m.label;
+
+      const val = document.createElement('div');
+      val.className = 'kpi-value' + (m.cls ? ' ' + m.cls : '');
+      val.textContent = m.value;
+
+      card.appendChild(lbl);
+      card.appendChild(val);
+      grid.appendChild(card);
+    });
+    el.appendChild(grid);
+
+    // トップ投稿
+    const topPosts = Array.isArray(data.topPosts) ? data.topPosts : [];
+    const topPostsTop3 = topPosts.slice(0, 3);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'top-posts';
+
+    const header = document.createElement('div');
+    header.className = 'top-posts-header';
+    header.textContent = 'トップ投稿 TOP3';
+    tableWrap.appendChild(header);
+
+    if (topPostsTop3.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.padding = '20px 18px';
+      empty.style.color = '#3a5070';
+      empty.style.fontSize = '13px';
+      empty.textContent = 'データなし';
+      tableWrap.appendChild(empty);
+    } else {
+      topPostsTop3.forEach(post => {
+        const row = document.createElement('div');
+        row.className = 'top-post-row';
+
+        const platformEl = document.createElement('div');
+        platformEl.className = 'top-post-platform';
+        platformEl.textContent = post.platform || '--';
+
+        const rateEl = document.createElement('div');
+        rateEl.className = 'top-post-rate';
+        const rate = post.engagementRate != null
+          ? (parseFloat(post.engagementRate) * 100).toFixed(2) + '%'
+          : '--';
+        rateEl.textContent = rate;
+
+        const urlEl = document.createElement('div');
+        urlEl.className = 'top-post-url';
+        if (post.url) {
+          const a = document.createElement('a');
+          a.href = post.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = post.url;
+          urlEl.appendChild(a);
+        } else {
+          urlEl.textContent = '--';
+        }
+
+        row.appendChild(platformEl);
+        row.appendChild(rateEl);
+        row.appendChild(urlEl);
+        tableWrap.appendChild(row);
+      });
+    }
+    el.appendChild(tableWrap);
+  }
+
+  // ---- グラフ ----
+  async function loadChart(days) {
+    chartDays = days;
+
+    // ボタンの active 状態
+    document.getElementById('chart-7d-btn').style.opacity = days === 7 ? '1' : '0.5';
+    document.getElementById('chart-30d-btn').style.opacity = days === 30 ? '1' : '0.5';
+
+    try {
+      const data = await apiCall('GET', `/analytics/chart?days=${days}`);
+      renderChart(data);
+    } catch (e) {
+      const ctx = document.getElementById('engagement-chart').getContext('2d');
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.fillStyle = '#3a5070';
+      ctx.font = '14px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(`データの取得に失敗しました: ${e.message}`, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+  }
+
+  function renderChart(data) {
+    const platformColors = {
+      twitter:   { border: '#1d9bf0', bg: 'rgba(29,155,240,0.15)' },
+      instagram: { border: '#e1306c', bg: 'rgba(225,48,108,0.15)' },
+      tiktok:    { border: '#cccccc', bg: 'rgba(200,200,200,0.15)' },
+    };
+    const defaultColor = { border: '#a9c4ff', bg: 'rgba(169,196,255,0.15)' };
+
+    // data は { labels: string[], datasets: [{platform, data: number[]}] } を想定
+    const labels = Array.isArray(data.labels) ? data.labels : [];
+    const rawDatasets = Array.isArray(data.datasets) ? data.datasets : [];
+
+    const datasets = rawDatasets.map(ds => {
+      const platform = (ds.platform || '').toLowerCase();
+      const color = platformColors[platform] || defaultColor;
+      return {
+        label: ds.platform || platform,
+        data: Array.isArray(ds.data) ? ds.data.map(v => v != null ? parseFloat((v * 100).toFixed(2)) : null) : [],
+        borderColor: color.border,
+        backgroundColor: color.bg,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+        borderWidth: 2,
+      };
+    });
+
+    if (chartInstance) {
+      chartInstance.destroy();
+      chartInstance = null;
+    }
+
+    const ctx = document.getElementById('engagement-chart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: { color: '#8ba8e0', font: { size: 12 } },
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: '#556888', font: { size: 11 } },
+            grid: { color: '#1e2d50' },
+          },
+          y: {
+            ticks: {
+              color: '#556888',
+              font: { size: 11 },
+              callback: v => v + '%',
+            },
+            grid: { color: '#1e2d50' },
+          },
+        },
+      },
+    });
+  }
+
+  // ---- PDCAレポート ----
+  async function loadPdca() {
+    const el = document.getElementById('pdca-content');
+    el.innerHTML = '<div class="empty-state">読み込み中...</div>';
+    try {
+      const data = await apiCall('GET', '/reports/latest');
+      if (!data || !data.report) {
+        el.innerHTML = '';
+        const msg = document.createElement('div');
+        msg.className = 'empty-state';
+        msg.textContent = 'まだレポートがありません（毎週月曜日に自動生成）';
+        el.appendChild(msg);
+        return;
+      }
+      renderPdca(data.report);
+    } catch (e) {
+      el.innerHTML = '';
+      const msg = document.createElement('div');
+      msg.className = 'empty-state';
+      // 404 はレポート未生成として扱う
+      if (e.message && e.message.includes('404')) {
+        msg.textContent = 'まだレポートがありません（毎週月曜日に自動生成）';
+      } else {
+        msg.textContent = `データの取得に失敗しました: ${e.message}`;
+      }
+      el.appendChild(msg);
+    }
+  }
+
+  function renderPdca(report) {
+    const el = document.getElementById('pdca-content');
+    el.innerHTML = '';
+
+    // ヘッダーカード
+    const headerCards = document.createElement('div');
+    headerCards.className = 'report-header-cards';
+
+    const stats = [
+      { label: '期間', value: report.period || '--' },
+      { label: '平均エンゲージメント', value: report.avgEngagementRate != null ? (parseFloat(report.avgEngagementRate) * 100).toFixed(2) + '%' : '--' },
+      { label: '総リーチ', value: report.totalImpressions != null ? Number(report.totalImpressions).toLocaleString() : '--' },
+    ];
+
+    stats.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'report-stat';
+
+      const lbl = document.createElement('div');
+      lbl.className = 'report-stat-label';
+      lbl.textContent = s.label;
+
+      const val = document.createElement('div');
+      val.className = 'report-stat-value';
+      val.textContent = s.value;
+
+      card.appendChild(lbl);
+      card.appendChild(val);
+      headerCards.appendChild(card);
+    });
+    el.appendChild(headerCards);
+
+    // レポート本文
+    const body = document.createElement('div');
+    body.className = 'report-body';
+
+    const pre = document.createElement('pre');
+    pre.textContent = report.summary || '（サマリーなし）';
+    body.appendChild(pre);
+    el.appendChild(body);
+  }
+
+  // ---- スケジューラー ----
+  async function loadScheduler() {
+    const el = document.getElementById('scheduler-content');
+    el.innerHTML = '<div class="empty-state">読み込み中...</div>';
+    try {
+      const data = await apiCall('GET', '/scheduler/status');
+      renderScheduler(data);
+    } catch (e) {
+      el.innerHTML = '';
+      const msg = document.createElement('div');
+      msg.className = 'empty-state';
+      msg.textContent = `データの取得に失敗しました: ${e.message}`;
+      el.appendChild(msg);
+    }
+  }
+
+  function renderScheduler(data) {
+    const el = document.getElementById('scheduler-content');
+    el.innerHTML = '';
+
+    const isRunning = !!data.isRunning;
+
+    // ステータス表示
+    const statusBox = document.createElement('div');
+    statusBox.className = 'scheduler-status';
+
+    const rows = [
+      { label: '稼働状態', content: () => {
+        const wrap = document.createElement('div');
+        wrap.style.display = 'flex';
+        wrap.style.alignItems = 'center';
+        wrap.style.gap = '8px';
+        const dot = document.createElement('span');
+        dot.className = 'status-dot ' + (isRunning ? 'running' : 'stopped');
+        const txt = document.createElement('span');
+        txt.className = 'status-value';
+        txt.textContent = isRunning ? '稼働中' : '停止中';
+        wrap.appendChild(dot);
+        wrap.appendChild(txt);
+        return wrap;
+      }},
+      { label: '投稿時刻', value: data.postTime || '--' },
+      { label: '自動承認', value: data.autoApprove != null ? (data.autoApprove ? 'ON' : 'OFF') : '--' },
+    ];
+
+    rows.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'status-row';
+
+      const lbl = document.createElement('span');
+      lbl.className = 'status-label';
+      lbl.textContent = r.label;
+      row.appendChild(lbl);
+
+      if (r.content) {
+        row.appendChild(r.content());
+      } else {
+        const val = document.createElement('span');
+        val.className = 'status-value';
+        val.textContent = r.value;
+        row.appendChild(val);
+      }
+
+      statusBox.appendChild(row);
+    });
+    el.appendChild(statusBox);
+
+    // 起動・停止ボタン
+    const actions = document.createElement('div');
+    actions.className = 'scheduler-actions';
+
+    const startBtn = document.createElement('button');
+    startBtn.className = 'btn btn-success btn-sm';
+    startBtn.textContent = 'スケジューラー起動';
+    startBtn.disabled = isRunning;
+    startBtn.onclick = schedulerStart;
+    actions.appendChild(startBtn);
+
+    const stopBtn = document.createElement('button');
+    stopBtn.className = 'btn btn-danger btn-sm';
+    stopBtn.textContent = 'スケジューラー停止';
+    stopBtn.disabled = !isRunning;
+    stopBtn.onclick = schedulerStop;
+    actions.appendChild(stopBtn);
+
+    el.appendChild(actions);
+
+    // topics.json の説明
+    const note = document.createElement('div');
+    note.className = 'topics-note';
+    note.innerHTML = '';
+    const noteText = document.createElement('p');
+    noteText.textContent = 'topics.json はサーバー上で直接編集してください。';
+    noteText.style.marginBottom = '8px';
+    const notePath = document.createElement('p');
+    notePath.style.color = '#3a5070';
+    notePath.style.fontSize = '12px';
+    const codeEl = document.createElement('code');
+    codeEl.textContent = 'sns-manage/topics.json';
+    notePath.appendChild(document.createTextNode('ファイルパス: '));
+    notePath.appendChild(codeEl);
+    note.appendChild(noteText);
+    note.appendChild(notePath);
+    el.appendChild(note);
+  }
+
+  async function schedulerStart() {
+    hideError();
+    try {
+      await apiCall('POST', '/scheduler/start');
+      await loadScheduler();
+    } catch (e) {
+      showError(`スケジューラーの起動に失敗しました: ${e.message}`);
+    }
+  }
+
+  async function schedulerStop() {
+    hideError();
+    try {
+      await apiCall('POST', '/scheduler/stop');
+      await loadScheduler();
+    } catch (e) {
+      showError(`スケジューラーの停止に失敗しました: ${e.message}`);
+    }
+  }
+
+  // ---- 週次レポート ----
+  async function loadWeekly() {
+    try {
+      const data = await apiCall('GET', '/report/weekly');
+      renderWeeklyKpis(data);
+      renderWeeklyAi(data.latestReport);
+      renderWeeklyTopPost(data.topPosts);
+      renderWeeklyChart(data.snapshots);
+    } catch (err) {
+      showError('週次レポートの読み込みに失敗しました');
+    }
+  }
+
+  function renderWeeklyKpis(data) {
+    const { thisWeek, lastWeek, changes, latestReport } = data;
+
+    // 期間表示
+    const report = latestReport;
+    if (report?.summaryJson) {
+      const s = report.summaryJson;
+      document.getElementById('weekly-period').textContent =
+        `期間: ${s.weekStart || ''} 〜 ${s.weekEnd || ''}`;
+    }
+    if (report?.created_at) {
+      document.getElementById('weekly-generated').textContent =
+        `レポート生成: ${formatDate(report.created_at)}`;
+    }
+
+    const kpis = [
+      { label: 'インプレッション', key: 'impressions', format: n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n?.toLocaleString() || '0' },
+      { label: 'いいね',           key: 'likes',        format: n => n?.toLocaleString() || '0' },
+      { label: 'エンゲージ率',     key: 'avgEngagement', format: n => n ? (n * 100).toFixed(2)+'%' : '0%' },
+      { label: 'フォロワー増減',   key: 'followerDelta', format: n => (n >= 0 ? '+' : '') + (n?.toLocaleString() || '0') },
+      { label: 'リンククリック',   key: 'linkClicks',   format: n => n?.toLocaleString() || '0' },
+    ];
+
+    const grid = document.getElementById('weekly-kpis');
+    grid.innerHTML = kpis.map(k => {
+      const val = thisWeek?.[k.key] ?? 0;
+      const chg = changes?.[k.key];
+      let changeHtml = '';
+      if (chg !== null && chg !== undefined) {
+        const cls = chg > 0 ? 'change-up' : chg < 0 ? 'change-down' : 'change-flat';
+        const arrow = chg > 0 ? '↑' : chg < 0 ? '↓' : '→';
+        changeHtml = `<span class="kpi-compare-change ${cls}">${arrow} ${Math.abs(chg)}%</span>`;
+      } else {
+        changeHtml = `<span class="kpi-compare-change change-flat">先週データなし</span>`;
+      }
+      return `
+        <div class="kpi-compare-card">
+          <div class="kpi-compare-label">${escapeHtml(k.label)}</div>
+          <div class="kpi-compare-value">${escapeHtml(k.format(val))}</div>
+          ${changeHtml}
+        </div>`;
+    }).join('');
+  }
+
+  function renderWeeklyAi(report) {
+    if (!report?.aiInsights) {
+      document.getElementById('weekly-summary').innerHTML = '<div class="empty-state">レポートがまだありません。「AIレポート生成」をクリックしてください。</div>';
+      return;
+    }
+
+    const ai = report.aiInsights;
+
+    // サマリー
+    document.getElementById('weekly-summary').innerHTML =
+      `<p style="font-size:14px;color:#c8d8f0;line-height:1.8">${escapeHtml(ai.summary || '')}</p>`;
+
+    // ハイライト（良かった/悪かった）
+    const hlGrid = document.getElementById('weekly-highlights');
+    if (ai.highlights?.length) {
+      hlGrid.innerHTML = ai.highlights.map(h => `
+        <div class="highlight-card highlight-${escapeHtml(h.type)}">
+          <div class="highlight-type">${h.type === 'good' ? '✓ 良かった点' : '✗ 改善が必要'}</div>
+          <div class="highlight-metric">${escapeHtml(h.metric || '')}</div>
+          <div class="highlight-desc">${escapeHtml(h.description || '')}</div>
+        </div>`).join('');
+    } else {
+      hlGrid.innerHTML = '';
+    }
+
+    // 改善提案
+    const suggEl = document.getElementById('weekly-suggestions');
+    if (ai.suggestions?.length) {
+      suggEl.innerHTML = ai.suggestions.map((s, i) => `
+        <div class="suggestion-item">
+          <div class="suggestion-num">${i + 1}</div>
+          <div class="suggestion-body">
+            <div class="suggestion-category">${escapeHtml(s.category || '')}</div>
+            <div class="suggestion-action">${escapeHtml(s.action || '')}</div>
+            <div class="suggestion-effect">期待効果: ${escapeHtml(s.expectedEffect || '')}</div>
+          </div>
+        </div>`).join('');
+    } else {
+      suggEl.innerHTML = '<div class="empty-state">提案データなし</div>';
+    }
+
+    // 来週フォーカス + リスクアラート
+    const focusRow = document.getElementById('weekly-focus-row');
+    focusRow.innerHTML = `
+      <div class="focus-card">
+        <div class="focus-title">来週のフォーカスポイント</div>
+        <div class="focus-text">${escapeHtml(ai.nextWeekFocus || '—')}</div>
+      </div>
+      ${ai.riskAlert ? `
+      <div class="risk-card">
+        <div class="risk-title">⚠ リスクアラート</div>
+        <div class="risk-text">${escapeHtml(ai.riskAlert)}</div>
+      </div>` : '<div></div>'}`;
+  }
+
+  function renderWeeklyTopPost(topPosts) {
+    const el = document.getElementById('weekly-toppost');
+    if (!topPosts?.length) {
+      el.innerHTML = '<div class="empty-state">投稿データなし</div>';
+      return;
+    }
+    const p = topPosts[0];
+    el.innerHTML = `
+      <div class="post-item">
+        <div class="post-platform">${escapeHtml(p.platform || '')}</div>
+        <div class="post-content">${escapeHtml((p.caption || '').slice(0, 120))}${(p.caption || '').length > 120 ? '...' : ''}</div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#556888">
+          <span>👁 ${(p.impressions||0).toLocaleString()}</span>
+          <span>❤ ${(p.likes||0).toLocaleString()}</span>
+          <span>📊 ${((p.engagement_rate||0)*100).toFixed(2)}%</span>
+          ${p.post_url ? `<a href="${escapeHtml(p.post_url)}" target="_blank" style="color:#4a7fd4;text-decoration:none">投稿を見る →</a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function renderWeeklyChart(snapshots) {
+    if (!snapshots?.length) return;
+
+    const dates = [...new Set(snapshots.map(s => s.snapshot_date))].sort();
+    const platforms = [...new Set(snapshots.map(s => s.platform))];
+
+    const COLORS = { twitter: '#1DA1F2', instagram: '#E1306C', youtube: '#FF0000', tiktok: '#010101' };
+
+    const datasets = platforms.map(pl => {
+      const data = dates.map(d => {
+        const row = snapshots.find(s => s.snapshot_date === d && s.platform === pl);
+        return row ? Math.round((row.engagement_rate || 0) * 10000) / 100 : null;
+      });
+      return {
+        label: pl,
+        data,
+        borderColor: COLORS[pl] || '#4a7fd4',
+        backgroundColor: (COLORS[pl] || '#4a7fd4') + '22',
+        fill: false,
+        tension: 0.3,
+        spanGaps: true,
+      };
+    });
+
+    const ctx = document.getElementById('weekly-chart').getContext('2d');
+    if (weeklyChartInstance) weeklyChartInstance.destroy();
+    weeklyChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: dates, datasets },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#8ba8e0', font: { size: 12 } } },
+          title: { display: true, text: 'エンゲージ率 (%)', color: '#8ba8e0' },
+        },
+        scales: {
+          x: { ticks: { color: '#556888' }, grid: { color: '#1e2d50' } },
+          y: { ticks: { color: '#556888', callback: v => v + '%' }, grid: { color: '#1e2d50' } },
+        },
+      },
+    });
+  }
+
+  async function takeSnapshot() {
+    const btn = document.getElementById('snapshot-btn');
+    btn.disabled = true;
+    btn.textContent = '取得中...';
+    try {
+      await apiCall('POST', '/report/snapshot');
+      await loadWeekly();
+    } catch {
+      showError('スナップショット取得に失敗しました');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'スナップショット取得';
+    }
+  }
+
+  async function generateReport() {
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+    try {
+      await apiCall('POST', '/report/generate');
+      await loadWeekly();
+    } catch {
+      showError('レポート生成に失敗しました');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'AIレポート生成';
+    }
+  }
+
+  // ---- 提案タブ (11_advisor) ----
+  async function loadAdvisor() {
+    try {
+      const res = await apiCall('GET', '/api/advisor/latest');
+      if (!res || res.status === 'no_data') {
+        document.getElementById('advisor-axis').innerHTML = '<div class="empty-state">まだデータがありません。「AIアドバイス生成」ボタンを押してください。</div>';
+        document.getElementById('advisor-weekly-plan').innerHTML = '<div class="empty-state">データなし</div>';
+        document.getElementById('advisor-hypotheses').innerHTML = '<div class="empty-state">データなし</div>';
+        document.getElementById('advisor-times').innerHTML = '<div class="empty-state">データなし</div>';
+        document.getElementById('advisor-risks').innerHTML = '<div class="empty-state">データなし</div>';
+        return;
+      }
+      renderAdvisorAxis(res.winningAxis);
+      renderAdvisorWeeklyPlan(res.weeklyPlan);
+      renderAdvisorHypotheses(res.nextHypotheses);
+      renderAdvisorTimes(res.optimalTimes);
+      renderAdvisorRisks(res.riskWarnings);
+
+      document.getElementById('advisor-apply-btn').style.display = 'inline-block';
+      if (res.generatedAt) {
+        document.getElementById('advisor-generated').textContent = '生成日時: ' + new Date(res.generatedAt).toLocaleString('ja-JP');
+      }
+
+      const qualityLabels = { bootstrap: '初期フェーズ（データ蓄積中）', developing: '成長フェーズ', mature: '成熟フェーズ' };
+      const qualityColors = { bootstrap: '#ea580c', developing: '#4338ca', mature: '#059669' };
+      const q = res.dataQuality || 'bootstrap';
+      document.getElementById('advisor-quality-badge').innerHTML =
+        `<span style="background:${qualityColors[q]};color:#fff;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:600">${qualityLabels[q]}</span>`;
+    } catch(e) {
+      showError('アドバイザーデータの取得に失敗しました: ' + e.message);
+    }
+  }
+
+  function renderAdvisorAxis(axis) {
+    if (!axis) return;
+    const colors = { desire_centric: '#4338ca', object_centric: '#ea580c', inconclusive: '#6b7280' };
+    const labels = { desire_centric: '欲望主語', object_centric: '商品主語', inconclusive: '未確定' };
+    const winner = axis.winner || 'inconclusive';
+    document.getElementById('advisor-axis').innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="background:${colors[winner]};color:#fff;padding:8px 20px;border-radius:8px;font-size:18px;font-weight:700">
+          ${labels[winner]} が優勢
+        </div>
+        <div style="color:#8ba8e0;font-size:13px">
+          desire_centric: ${axis.desireCentricWins || 0}勝 /
+          object_centric: ${axis.objectCentricWins || 0}勝 /
+          証拠: ${axis.evidenceCount || 0}件（信頼度: ${escapeHtml(axis.confidence || 'low')}）
+        </div>
+      </div>
+      <div style="margin-top:12px;color:#ccc;font-size:14px">${escapeHtml(axis.summary || '')}</div>
+    `;
+  }
+
+  function renderAdvisorWeeklyPlan(plan) {
+    if (!plan?.length) return;
+    const platformEmoji = { twitter: '𝕏', threads: '🧵', instagram: '📷', tiktok: '🎵' };
+    const hookColors = { desire_centric: '#4338ca', object_centric: '#ea580c' };
+    document.getElementById('advisor-weekly-plan').innerHTML = plan.map((item, i) => `
+      <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #1e2d50;align-items:flex-start">
+        <div style="background:#1e2d50;color:#a9c4ff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${i+1}</div>
+        <div style="flex:1">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+            <span style="font-weight:600;color:#e0e0e0">${escapeHtml(item.topic)}</span>
+            <span style="font-size:13px">${platformEmoji[item.platform] || escapeHtml(item.platform)}</span>
+            <span style="background:${hookColors[item.hookType]||'#333'};color:#fff;padding:1px 8px;border-radius:10px;font-size:11px">${escapeHtml(item.hookType)}</span>
+          </div>
+          <div style="color:#8ba8e0;font-size:13px;margin-bottom:4px">${escapeHtml(item.reason)}</div>
+          ${item.suggestedAngle ? `<div style="color:#a9c4ff;font-size:12px">→ ${escapeHtml(item.suggestedAngle)}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderAdvisorHypotheses(hypotheses) {
+    if (!hypotheses?.length) return;
+    document.getElementById('advisor-hypotheses').innerHTML = hypotheses.map((h, i) => `
+      <div style="padding:14px;background:#1e2d50;border-radius:8px;margin-bottom:10px">
+        <div style="font-weight:600;color:#a9c4ff;margin-bottom:6px">仮説 ${i+1}: ${escapeHtml(h.hypothesis)}</div>
+        <div style="color:#8ba8e0;font-size:13px;margin-bottom:4px">根拠: ${escapeHtml(h.why)}</div>
+        <div style="color:#6ee7b7;font-size:13px">期待: ${escapeHtml(h.expectedOutcome)}</div>
+        <div style="color:#556888;font-size:12px;margin-top:4px">Platform: ${escapeHtml(h.platform)}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderAdvisorTimes(times) {
+    if (!times) return;
+    const rows = Object.entries(times).map(([p, t]) =>
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e2d50"><span style="color:#8ba8e0">${escapeHtml(p)}</span><span style="font-weight:600">${escapeHtml(t)}</span></div>`
+    ).join('');
+    document.getElementById('advisor-times').innerHTML = rows || '<div class="empty-state">データなし</div>';
+  }
+
+  function renderAdvisorRisks(risks) {
+    if (!risks?.length) return;
+    document.getElementById('advisor-risks').innerHTML = risks.map(r =>
+      `<div style="padding:8px 0;border-bottom:1px solid #1e2d50;color:#fcd34d;font-size:13px">⚠ ${escapeHtml(r)}</div>`
+    ).join('');
+  }
+
+  async function generateAdvisor() {
+    const btn = document.getElementById('advisor-gen-btn');
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+    try {
+      await apiCall('POST', '/api/advisor/generate');
+      await loadAdvisor();
+    } catch(e) {
+      showError('アドバイス生成に失敗しました: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'AIアドバイス生成';
+    }
+  }
+
+  async function applyAdvisorPlan() {
+    if (!confirm('このプランを topics.json に適用しますか？\n現在の topics.json は .bak にバックアップされます。')) return;
+    const btn = document.getElementById('advisor-apply-btn');
+    btn.disabled = true;
+    try {
+      const res = await apiCall('POST', '/api/advisor/apply');
+      alert(`✅ ${res.appliedCount}件のトピックを topics.json に適用しました。`);
+    } catch(e) {
+      showError('適用に失敗しました: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

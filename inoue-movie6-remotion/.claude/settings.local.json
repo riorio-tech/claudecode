@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/reoreo/claudecode -type d -not -path */.*)",
+      "Bash(xargs file:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(ffprobe -v quiet -print_format json -show_format -show_streams /Users/reoreo/Downloads/モバイル充電器.mp4)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); f=d[''''format'''']; s=next\\(x for x in d[''''streams''''] if x[''''codec_type'''']==''''video''''\\); print\\(f''''duration={float\\(f[\"\"duration\"\"]\\):.1f}s width={s[\"\"width\"\"]} height={s[\"\"height\"\"]} codec={s[\"\"codec_name\"\"]}''''\\)\")",
+      "Bash(ffprobe '/Users/reoreo/Downloads/モバイル充電器.mp4')",
+      "Bash(ffprobe '/Users/reoreo/Downloads/爪切り-AI音声.mp4')",
+      "Bash(ffprobe:*)",
+      "Bash(export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\")",
+      "Bash(brew list:*)",
+      "Bash(python3 -c \"import subprocess; r=subprocess.run\\([''''mdls'''',''''-name'''',''''kMDItemDurationSeconds'''',''''/Users/reoreo/Downloads/爪切り-AI音声.mp4''''],capture_output=True,text=True\\); print\\(''''爪切り'''',r.stdout.strip\\(\\)\\); r2=subprocess.run\\([''''mdls'''',''''-name'''',''''kMDItemDurationSeconds'''',''''/Users/reoreo/Downloads/モバイル充電器.mp4''''],capture_output=True,text=True\\); print\\(''''充電器'''',r2.stdout.strip\\(\\)\\)\")",
+      "Bash(python3:*)",
+      "WebSearch",
+      "Bash(wc:*)",
+      "Bash(rm:*)"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+# 環境変数・シークレット（絶対にコミットしない）
+.env
+.env.local
+.env.*.local
+
+# 依存パッケージ
+node_modules/
+**/node_modules/
+
+# ビルド成果物
+dist/
+build/
+.next/
+out/
+
+# DB・ログ
+*.db
+*.db-shm
+*.db-wal
+*.log
+logs/
+
+# 一時ファイル・ジョブ出力
+/tmp/
+output/
+reports/
+*.mp4
+*.mp3
+*.wav
+
+# OS
+.DS_Store
+Thumbs.db
+
+# エディタ
+.vscode/
+.idea/
+*.swp
+
+# その他
+*.pptx
+3cdbd840136286e3@v9/

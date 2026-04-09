@@ -1,0 +1,13 @@
+feat: ツリー投稿・日次レポート・コスト最適化
+
+- threads-api.js: reply_to_id対応・publishThread追加
+- writer.js: 3パート構成（フック→詳細→まとめ）に変更、Haiku化
+- poster.js: ツリー投稿（3連reply chain）対応
+- reviewer.js: partsからfinal_parts/final_textを自動セット、出力削減
+- syncer.js: /insights エンドポイントでエンゲージメント取得に修正
+- reporter.js: 日次レポート新規作成（sync→集計→AI分析→ファイル保存）
+- cli.js: reportコマンド追加・cron 21時レポート組み込み
+- ai-client.js: web_search max_uses 3→1に削減
+- コスト: Sonnet→Haiku化・writingGuide全文注入廃止で約74%削減
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

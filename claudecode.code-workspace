@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "name": "claudecode",
+      "path": "."
+    },
+    {
+      "name": ".claude (rules / commands / settings)",
+      "path": "/Users/reoreo/.claude"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.DS_Store": true
+    }
+  }
+}

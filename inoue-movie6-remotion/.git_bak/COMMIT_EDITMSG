@@ -1,0 +1,10 @@
+feat: compose品質向上 - 尺22秒・フィーチャーカード・アニメーション多様化
+
+- frame.ts: 半透明テキストボックス追加、renderFeatureCard()追加（白背景+特徴リスト+金チェック）
+- renderer.ts: zoom-out アニメーション追加
+- template-compose/agent.ts:
+  - テンプレート尺を22秒にスケール（rawTotal→TARGET配分）
+  - cut3後にフィーチャーカード(5秒)を自動挿入
+  - zoom-in/fade/zoom-outを順番に割り当て
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
