@@ -65,7 +65,12 @@ ${recentTexts || 'なし'}
   const selected = draft.variants.find(v => v.id === result.selected_id) ?? draft.variants[0];
   if (selected?.parts) {
     result.final_parts = selected.parts;
-    result.final_text = [selected.parts.hook, selected.parts.detail, selected.parts.summary].join('\n\n');
+    const p = selected.parts;
+    // 4パート or 旧3パートどちらにも対応
+    const texts = p.bridge
+      ? [p.hook, p.bridge, p.detail, p.summary]
+      : [p.hook, p.detail, p.summary];
+    result.final_text = texts.filter(Boolean).join('\n\n');
   } else {
     result.final_text = selected?.text ?? '';
   }

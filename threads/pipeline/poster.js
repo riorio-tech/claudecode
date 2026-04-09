@@ -9,12 +9,16 @@ export async function poster(jobDir, theme, review, isDryRun) {
   const text = review.final_text;
 
   if (isThread) {
-    const { hook, detail, summary } = review.final_parts;
-    logger.info('ツリー投稿（3連）');
+    const { hook, bridge, detail, summary } = review.final_parts;
+    const parts4 = bridge
+      ? [hook, bridge, detail, summary]
+      : [hook, detail, summary];
+    const label = bridge ? '4連' : '3連';
+    logger.info(`ツリー投稿（${label}）`);
     console.log('\x1b[35m' + '─'.repeat(50) + '\x1b[0m');
-    console.log('\x1b[33m[1]\x1b[0m ' + hook);
-    console.log('\x1b[33m[2]\x1b[0m ' + detail);
-    console.log('\x1b[33m[3]\x1b[0m ' + summary);
+    parts4.filter(Boolean).forEach((p, i) => {
+      console.log(`\x1b[33m[${i + 1}]\x1b[0m ` + p);
+    });
     console.log('\x1b[35m' + '─'.repeat(50) + '\x1b[0m');
   } else {
     logger.post(text);
@@ -34,8 +38,11 @@ export async function poster(jobDir, theme, review, isDryRun) {
   }
 
   if (isThread) {
-    const { hook, detail, summary } = review.final_parts;
-    const posts = await publishThread([hook, detail, summary]);
+    const { hook, bridge, detail, summary } = review.final_parts;
+    const parts4 = bridge
+      ? [hook, bridge, detail, summary]
+      : [hook, detail, summary];
+    const posts = await publishThread(parts4.filter(Boolean));
     logger.success(`ツリー投稿完了: ${posts.map(p => p.postId).join(' → ')}`);
     const result = {
       dry_run: false,
